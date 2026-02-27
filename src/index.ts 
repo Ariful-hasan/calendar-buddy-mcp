@@ -1,0 +1,45 @@
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import dotenv from "dotenv";
+import { getUpcomingEvents } from "./calendar.js";
+
+dotenv.config();
+
+/**
+ * 1. Create the MCP server
+ */
+const server = new McpServer({
+  name: "mcp-google-calendar",
+  version: "0.1.0",
+});
+
+server.registerTool(
+  "get_upcoming_events",
+  {
+    description: "Get upcoming Google Calendar events",
+    inputSchema: {
+      type: "object",
+      properties: {
+        start: { type: "string", description: "ISO start datetime" },
+        end: { type: "string", description: "ISO end datetime" }
+      },
+      required: ["start", "end"]
+    },
+  },
+  
+  async (params) => {
+    const events = await getUpcomingEvents(params.start, params.end);
+
+    return {
+      content: [
+        {
+          type: "text",
+          text: JSON.stringify(events, null, 2),
+        },
+      ],
+    };
+  }
+);
+
+const transport = new StdioServerTransport();
+await server.connect(transport);
