@@ -1,6 +1,12 @@
 import { google } from "googleapis";
 
-export async function getUpcomingEvents() {
+/**
+ * Fetch calendar events between two ISO datetimes
+ */
+export async function getEventsInRange(
+  start: string,
+  end: string
+) {
   const auth = new google.auth.GoogleAuth({
     scopes: ["https://www.googleapis.com/auth/calendar.readonly"],
   });
@@ -10,13 +16,14 @@ export async function getUpcomingEvents() {
     auth,
   });
 
-  const res = await calendar.events.list({
+  const response = await calendar.events.list({
     calendarId: "primary",
-    maxResults: 10,
+    timeMin: start,
+    timeMax: end,
     singleEvents: true,
     orderBy: "startTime",
-    timeMin: new Date().toISOString(),
+    maxResults: 50,
   });
 
-  return res.data.items ?? [];
+  return response.data.items ?? [];
 }
